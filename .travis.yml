@@ -1,0 +1,17 @@
+language: node_js
+
+node_js:
+   - node # will use latest node
+
+cache: yarn # notfully set up yet, see http://docs.travis-ci.com/user/caching/ for additional configuration
+
+before_script: # commands to run before the build step
+   - yarn add @angular/cli
+
+script: # the build step
+   - ng build --prod
+
+notifications:
+  email: # only receive email when the build status changes (someone broke the build!)
+    on_failure: change
+    on_success: change
