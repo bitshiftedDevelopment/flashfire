@@ -4,7 +4,7 @@ import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 
 import { AppComponent } from './app.component';
-
+import { FlashFireModule } from './flashfire/flashfire.module';
 
 @NgModule({
   declarations: [
@@ -12,7 +12,8 @@ import { AppComponent } from './app.component';
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    FlashFireModule
   ],
   providers: [],
   bootstrap: [AppComponent]
