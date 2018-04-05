@@ -6,9 +6,6 @@ import { AuthModule } from './auth/auth.module';
     CommonModule,
     AuthModule
   ],
-  exports: [
-    AuthModule
-  ]
   declarations: []
 })
 export class FlashFireModule { }
