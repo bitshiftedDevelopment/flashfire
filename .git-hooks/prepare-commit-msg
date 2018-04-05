@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# This hook will append [ci skip] to any commit message
+# that contains changes to nothing but the README file.
+# Commits that include the readme among other files are
+# untouched by this hook.
+
+# a list of all files that are changing with this commit
+FILES_CHANGING=$(git diff --cached --name-only --diff-filter=ACM)
+# if there is only one file changing
+if [ "$(echo "$FILES_CHANGING" | wc -l)" -eq 1 ]; then
+  # and that file is a readme
+  README_CHANGING=$(echo "$FILES_CHANGING" | grep -Ei "README(.md|.txt)?$")
+  if [ -n "$README_CHANGING" ]; then
+    # append it to $1 - the file containing the commit message
+    echo " [ci skip]" >> $1
+  fi
+fi
