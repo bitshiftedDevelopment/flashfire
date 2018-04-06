@@ -9,7 +9,7 @@ import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/switchMap'
 
 // Extend the user profile data in this file as well as in updateUserData()
-import { User } from './user';
+import { User, UserProfile, Roles, PrivacyFlags } from './user';
 
 interface errMsg {
   errorCode: string;
@@ -81,19 +81,27 @@ export class AuthService {
   private oAuthLogin(provider) {
     return this.afAuth.auth.signInWithPopup(provider)
       .then((credential) => {
+        this.addUserRoles(credential.user)
+        //this.addUserPrivacyFlags(credential.user)
+        //this.addUserProfile(credential.user)
         this.updateUserData(credential.user)
       }).catch((error) => {
         // Handle Errors here.
-        this.error.errorCode = error.code;
-        this.error.errorMessage = error.message;
-        // The email of the user's account used.
-        this.error.email = error.email;
-        // The firebase.auth.AuthCredential type that was used.
-        this.error.credential = error.credential;
-        // ...
+        this.error = error;
       }).then(() => {
         this.router.navigate(['/home']);
       });
+  }
+
+  /* signOut()
+   * signs out the authenticated user and returns them home
+   */
+  signOut() {
+    this.afAuth.auth.signOut().then(() => {
+      this.router.navigate(['/home']);
+    }).catch(function(error) {
+      this.error = error
+    });
   }
 
   /* updateUserData(user)
@@ -106,36 +114,55 @@ export class AuthService {
     const userRef: AngularFirestoreDocument<any> = this.afs.doc(`users/${user.uid}`);
     const data: User = { // any additional data to be saved must be added here and to the imported interface
       uid: user.uid,
-      email: user.email,
-      displayName: user.displayName,
-      firstName: user.firstName || '',
-      lastName: user.lastName || '',
-      photoURL: user.photoURL || '',
-      roles: user.roles || { // roles is either the stored roles on the document or a new object
-        subscriber: true // we add the subscriber role on registration
-      },
-      privFlags: user.privFlags || {
-        email: false,
-        firstName: false,
-        lastName: false,
-        photoURL: false,
-        favoriteColor: false // example of adding additional user information - remove me if not wanted
-      },
-      favoriteColor: user.favoriteColor || '' // example of adding additional user information - remove me if not wanted
+      email: user.email ? user.email : '',
+      photoURL: user.photoURL ? user.photoURL : '',
+      displayName: user.displayName ? user.displayName : ''
+      // firstName: user.firstName != '' ? user.firstName : '',
+      // lastName: user.lastName != '' ? user.lastName : '',
+      // photoURL: user.photoURL || '',
+      // roles: user.roles || { // roles is either the stored roles on the document or a new object
+      //   subscriber: true // we add the subscriber role on registration
+      // },
+      //roles: this.addUserRoles(user),
+      // privFlags: user.privFlags || {
+      //   email: false,
+      //   firstName: false,
+      //   lastName: false,
+      //   photoURL: false,
+      //   favoriteColor: false // example of adding additional user information - remove me if not wanted
+      // },
+      // favoriteColor: user.favoriteColor || '' // example of adding additional user information - remove me if not wanted
     }
-    //FIXME overwrites user doc if admin role is set
     return userRef.set(data, { merge: true })
   }
 
-  /* signOut()
-   * signs out the authenticated user and returns them home
-   */
-  signOut() {
-    this.afAuth.auth.signOut().then(() => {
-      this.router.navigate(['/login']);
-    }).catch(function(error) {
-      this.error = error
-    });
+  private addUserProfile(user) {
+    const userProfileRef: AngularFirestoreDocument<any> = this.afs.doc(`users/${user.uid}/profile`);
+    const data: UserProfile = {
+      firstName: user.firstName != '' ? user.firstName : '',
+      lastName: user.lastName != '' ? user.lastName : '',
+      favoriteColor: user.favoriteColor || '' // example of adding additional user information - remove me if not wanted
+    }
+    return userProfileRef.set(data, { merge: true })
+  }
+
+  private addUserRoles(user) {
+    const userRolesRef: AngularFirestoreDocument<any> = this.afs.doc(`users/${user.uid}/roles`);
+    const data: Roles = { subscriber: true }
+    return userRolesRef.set(data, { merge: true })
+  }
+
+  // NOTE any data added to the profile must have a flag here to allow public viewing
+  private addUserPrivacyFlags(user) {
+    const userFlagsRef: AngularFirestoreDocument<any> = this.afs.doc(`users/${user.uid}/privacyFlags`);
+    const data: PrivacyFlags = {
+      email: false,
+      firstName: false,
+      lastName: false,
+      photoURL: false,
+      favoriteColor: false // example of adding additional user information - remove me if not wanted
+    }
+    return userFlagsRef.set(data, { merge: true })
   }
 
   getUserName() {
@@ -143,9 +170,7 @@ export class AuthService {
   }
 
   // ROLE FUNCTIONS
-  // Add functions here for additional user priviledges
-  // Note that creation is handled within Firestore security
-
+  // Add functions here for additional user permissions
   canRead(user: User): boolean {
     const allowed = ['admin', 'editor', 'subscriber']
     return this.checkAuthorization(user, allowed)
@@ -158,15 +183,17 @@ export class AuthService {
     const allowed = ['admin']
     return this.checkAuthorization(user, allowed)
   }
+
   /* checkAuthorization(user,roles[])
    * compares the user's role against an array of
    * allowed roles to see if they are authorized for
    * the functions above
    */
   private checkAuthorization(user: User, allowedRoles: string[]): boolean {
+    const userRolesRef: AngularFirestoreDocument<any> = this.afs.doc(`users/${user.uid}/roles`);
     if (!user) return false
     for (const role of allowedRoles) {
-      if (user.roles[role]) {
+      if (userRolesRef[role]) {
         return true
       }
     }

@@ -1,12 +1,18 @@
+<!--auth-->
 <div *ngIf="auth.user | async; then loggedIn else loggedOut">
 
 </div>
 
 <ng-template #loggedIn>
-  <h2>Welcome back, {{auth.getUserName()}}</h2>
-  <button (click)="auth.signOut()">Sign out</button>
+  <div *ngIf="(auth.user|async) as user">
+    <h2>Welcome back, {{user.displayName}}</h2>
+    <button (click)="auth.signOut()">Sign out</button>
+  </div>
 </ng-template>
 
 <ng-template #loggedOut>
   <button (click)="auth.googleLogin()">Login with Google</button>
 </ng-template>
+
+
+<!--firedb-->
