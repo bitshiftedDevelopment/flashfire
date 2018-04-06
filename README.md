@@ -9,3 +9,7 @@ _Various Firebase related Angular modules_
 ### Branch: Master
 
 Stable codebase for flashfire
+
+## Feature Roadmap
+- Role based user authentication services
+- Firestore database management services
