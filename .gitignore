@@ -47,7 +47,6 @@ coverage
 # Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
 .grunt
 
-
 # node-waf configuration
 .lock-wscript
 
@@ -89,3 +88,5 @@ Thumbs.db
 /connect.lock
 /libpeerconnection.log
 testem.log
+/src/environments/*
+firestore.secrules
